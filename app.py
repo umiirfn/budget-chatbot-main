@@ -1,35 +1,25 @@
+# app.py
+
 import streamlit as st
 import openai
 import os
 import time
 
-# ✅ Page config must come FIRST
+# ✅ MUST be the first Streamlit call
 st.set_page_config(page_title="💬 BudgetBot", layout="centered")
 
-
-# Load the OpenAI API key
+# 🔑 Load the OpenAI API key
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
-
 if not api_key:
     st.error("🚨 OpenAI API key not found. Please add it in Streamlit Secrets.")
     st.stop()
 
 client = openai.OpenAI(api_key=api_key)
 
-# Theme Toggle
+# 🌗 Theme toggle
 theme = st.toggle("🌗 Toggle Dark Mode")
 
-# Set Page Config
-st.set_page_config(page_title="💬 BudgetBot", layout="centered")
-st.markdown(f"""
-    <h1 style='text-align: center; color: {"white" if theme else "black"};'>💬 BudgetBot</h1>
-    <p style='text-align: center; font-size: 18px; color: {"#cccccc" if theme else "#333"}'>
-        Your friendly AI money mate. Pick a mode, ask anything, no shame here 💚
-    </p>
-    <hr style='border: none; height: 1px; background-color: {"#444" if theme else "#ccc"}'>
-""", unsafe_allow_html=True)
-
-# Mode Selector
+# 🧠 Mode selector
 mode = st.selectbox("Choose a mode:", [
     "🧑‍🎓 Student",
     "👵 Pensioner",
@@ -38,25 +28,35 @@ mode = st.selectbox("Choose a mode:", [
     "⚙️ Default"
 ])
 
+# Define personality tone
 if mode == "🧑‍🎓 Student":
-    tone = "You're speaking to a university student on a tight budget. Use casual, emoji-filled, student-friendly language. Be relatable."
+    tone = "You're speaking to a university student. Be casual, emoji-friendly, and help them manage limited money."
 elif mode == "👵 Pensioner":
-    tone = "You're speaking to a retired pensioner. Be respectful, simple, and gentle. Help with fixed income, bills, and peace of mind."
+    tone = "You're speaking to a pensioner. Be gentle, clear, and respectful. Help with fixed income and essentials."
 elif mode == "👔 Full-Time Worker":
-    tone = "You're helping a full-time employee. Offer budgeting tips for salary, travel, savings, and handling bills efficiently."
+    tone = "You're helping a full-time worker with salary planning, saving, commuting, and bills."
 elif mode == "📦 Sole Trader":
-    tone = "You're advising a self-employed sole trader. Talk about taxes, inventory, stock costs, profits, and smart business money tips."
+    tone = "You're advising a self-employed person. Help them with taxes, inventory costs, profit margins, and expenses."
 else:
-    tone = "You're BudgetBot — a warm, supportive AI that helps people talk about money without judgment."
+    tone = "You're BudgetBot — a supportive financial chatbot who talks like a friendly, emotionally intelligent human."
 
-# Start the conversation
+# 💬 App intro
+st.markdown(f"""
+    <h1 style='text-align: center; color: {"white" if theme else "black"};'>💬 BudgetBot</h1>
+    <p style='text-align: center; font-size: 18px; color: {"#cccccc" if theme else "#333"}'>
+        Your AI money mate. Ask about budgeting, spending, savings or business — no judgment 💚
+    </p>
+    <hr style='border: none; height: 1px; background-color: {"#444" if theme else "#ccc"}'>
+""", unsafe_allow_html=True)
+
+# 💾 Store message history
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": tone},
-        {"role": "assistant", "content": "Hey there! 👋 I’m BudgetBot — your AI money mate. Let’s talk budgeting, saving, or business costs 💸"}
+        {"role": "assistant", "content": "Hey there! 👋 I’m BudgetBot — your AI money mate. Let’s talk about your money today 💸"}
     ]
 
-# Message Renderer (with avatars + themes)
+# 🎨 Message rendering with avatar + theme
 def render_msg(role, content):
     if role == "user":
         bg = "#cce5ff" if not theme else "#2b3e50"
@@ -75,11 +75,11 @@ def render_msg(role, content):
     </div>
     """, unsafe_allow_html=True)
 
-# Display chat
+# 💬 Display message history
 for msg in st.session_state.messages[1:]:
     render_msg(msg["role"], msg["content"])
 
-# Input form
+# 📝 Input form with auto-clear
 with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("Type your message:", placeholder="e.g. Can I afford a takeaway?")
     submitted = st.form_submit_button("Send")
