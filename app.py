@@ -37,14 +37,38 @@ if "messages" not in st.session_state:
         {"role": "assistant", "content": "Hey there! 👋 I’m BudgetBot — your AI money mate. Want to talk about your budget, savings, or spending habits? 💸"}
     ]
 
-# Show message bubbles
-for msg in st.session_state.messages[1:]:
-    if msg["role"] == "user":
-        st.markdown(f"<div style='background-color:#e1f5fe; padding:10px; border-radius:10px; margin-bottom:10px;'><b>You:</b><br>{msg['content']}</div>", unsafe_allow_html=True)
-    elif msg["role"] == "assistant":
-        st.markdown(f"<div style='background-color:#f1f8e9; padding:10px; border-radius:10px; margin-bottom:10px;'><b>BudgetBot:</b><br>{msg['content']}</div>", unsafe_allow_html=True)
+# Message bubble renderer
+def render_message(role, content):
+    if role == "user":
+        bg_color = "#D1ECF1"  # Light blue
+        text_color = "#0C5460"  # Dark teal
+        label = "You"
+    else:
+        bg_color = "#E8F5E9"  # Light green
+        text_color = "#1B5E20"  # Dark green
+        label = "BudgetBot"
 
-# Input area
+    st.markdown(
+        f"""
+        <div style='
+            background-color:{bg_color};
+            color:{text_color};
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        '>
+            <strong>{label}:</strong><br>{content}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Show messages
+for msg in st.session_state.messages[1:]:
+    render_message(msg["role"], msg["content"])
+
+# Input form
 with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("Type your message:", placeholder="e.g. I’m broke till payday or Can I afford a takeaway?")
     submit = st.form_submit_button("Send")
@@ -53,7 +77,6 @@ if submit and user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     with st.spinner("BudgetBot is thinking..."):
-        # Simulate typing animation
         time.sleep(0.5)
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
