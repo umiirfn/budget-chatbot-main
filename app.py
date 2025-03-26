@@ -84,11 +84,11 @@ with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("Type your message:", placeholder="e.g. Can I afford a takeaway?")
     submitted = st.form_submit_button("Send")
 
-if submitted and user_input:
+# ✅ Only process when submitted and user_input is not empty
+if submitted and user_input.strip():
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     with st.spinner("BudgetBot is thinking..."):
-        time.sleep(0.4)
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": tone}] + st.session_state.messages[1:],
