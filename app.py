@@ -14,74 +14,83 @@ if not api_key:
 
 client = openai.OpenAI(api_key=api_key)
 
-# Set up the Streamlit page
+# Theme Toggle
+theme = st.toggle("🌗 Toggle Dark Mode")
+
+# Set Page Config
 st.set_page_config(page_title="💬 BudgetBot", layout="centered")
-st.markdown("<h1 style='text-align: center;'>💬 BudgetBot</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 18px;'>Your friendly AI money buddy. Let’s talk spending, saving, and skint days — no shame here 💚</p>", unsafe_allow_html=True)
-st.markdown("---")
+st.markdown(f"""
+    <h1 style='text-align: center; color: {"white" if theme else "black"};'>💬 BudgetBot</h1>
+    <p style='text-align: center; font-size: 18px; color: {"#cccccc" if theme else "#333"}'>
+        Your friendly AI money mate. Pick a mode, ask anything, no shame here 💚
+    </p>
+    <hr style='border: none; height: 1px; background-color: {"#444" if theme else "#ccc"}'>
+""", unsafe_allow_html=True)
 
-# 🔘 Mode Selector
-mode = st.radio("Choose a tone:", ["Default", "Student Mode", "Pensioner Mode"], horizontal=True)
+# Mode Selector
+mode = st.selectbox("Choose a mode:", [
+    "🧑‍🎓 Student",
+    "👵 Pensioner",
+    "👔 Full-Time Worker",
+    "📦 Sole Trader",
+    "⚙️ Default"
+])
 
-if mode == "Student Mode":
-    tone = "You're speaking to a young university student. Use casual language and emojis. Help them manage a tight student budget."
-elif mode == "Pensioner Mode":
-    tone = "You're speaking to a retired pensioner. Be extra kind, clear, and gentle. Help them with fixed income challenges."
+if mode == "🧑‍🎓 Student":
+    tone = "You're speaking to a university student on a tight budget. Use casual, emoji-filled, student-friendly language. Be relatable."
+elif mode == "👵 Pensioner":
+    tone = "You're speaking to a retired pensioner. Be respectful, simple, and gentle. Help with fixed income, bills, and peace of mind."
+elif mode == "👔 Full-Time Worker":
+    tone = "You're helping a full-time employee. Offer budgeting tips for salary, travel, savings, and handling bills efficiently."
+elif mode == "📦 Sole Trader":
+    tone = "You're advising a self-employed sole trader. Talk about taxes, inventory, stock costs, profits, and smart business money tips."
 else:
-    tone = "You're BudgetBot — a warm, supportive AI that helps people talk about money in real, everyday ways."
+    tone = "You're BudgetBot — a warm, supportive AI that helps people talk about money without judgment."
 
-# Store conversation in session
+# Start the conversation
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "system", "content": tone},
-        {"role": "assistant", "content": "Hey there! 👋 I’m BudgetBot — your AI money mate. Want to talk about your budget, savings, or spending habits? 💸"}
+        {"role": "assistant", "content": "Hey there! 👋 I’m BudgetBot — your AI money mate. Let’s talk budgeting, saving, or business costs 💸"}
     ]
 
-# Message bubble renderer
-def render_message(role, content):
+# Message Renderer (with avatars + themes)
+def render_msg(role, content):
     if role == "user":
-        bg_color = "#D1ECF1"  # Light blue
-        text_color = "#0C5460"  # Dark teal
+        bg = "#cce5ff" if not theme else "#2b3e50"
+        text = "#003366" if not theme else "#dceeff"
+        avatar = "🧑‍💻"
         label = "You"
     else:
-        bg_color = "#E8F5E9"  # Light green
-        text_color = "#1B5E20"  # Dark green
+        bg = "#e6ffe6" if not theme else "#344d2f"
+        text = "#0b3d0b" if not theme else "#d4ffd4"
+        avatar = "🤖"
         label = "BudgetBot"
 
-    st.markdown(
-        f"""
-        <div style='
-            background-color:{bg_color};
-            color:{text_color};
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-size: 16px;
-        '>
-            <strong>{label}:</strong><br>{content}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown(f"""
+    <div style='background-color: {bg}; color: {text}; padding: 14px; border-radius: 12px; margin-bottom: 12px; font-size: 16px;'>
+        <strong>{avatar} {label}:</strong><br>{content}
+    </div>
+    """, unsafe_allow_html=True)
 
-# Show messages
+# Display chat
 for msg in st.session_state.messages[1:]:
-    render_message(msg["role"], msg["content"])
+    render_msg(msg["role"], msg["content"])
 
 # Input form
 with st.form(key="chat_form", clear_on_submit=True):
-    user_input = st.text_input("Type your message:", placeholder="e.g. I’m broke till payday or Can I afford a takeaway?")
-    submit = st.form_submit_button("Send")
+    user_input = st.text_input("Type your message:", placeholder="e.g. Can I afford a takeaway?")
+    submitted = st.form_submit_button("Send")
 
-if submit and user_input:
+if submitted and user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     with st.spinner("BudgetBot is thinking..."):
-        time.sleep(0.5)
+        time.sleep(0.4)
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": tone}] + st.session_state.messages[1:],
-            max_tokens=200,
+            max_tokens=300,
             temperature=0.85
         )
         reply = response.choices[0].message.content.strip()
