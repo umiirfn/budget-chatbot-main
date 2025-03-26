@@ -42,7 +42,7 @@ else:
 
 # 💬 App intro
 st.markdown(f"""
-    <h1 style='text-align: center; color: {"#ffffff" if theme else "#111111"};'>💬 BudgetBot</h1>
+    <h1 style='text-align: center; color: #ffffff;'>💬 BudgetBot</h1>
     <p style='text-align: center; font-size: 18px; color: {"#cccccc" if theme else "#333333"}'>
         Your AI money mate. Ask about budgeting, spending, savings or business — no judgment 💚
     </p>
