@@ -5,6 +5,10 @@ import openai
 import os
 import time
 
+# ✅ Page config must come FIRST
+st.set_page_config(page_title="💬 BudgetBot", layout="centered")
+
+
 # Load the OpenAI API key
 api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
 
