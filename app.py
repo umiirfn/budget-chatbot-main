@@ -1,11 +1,10 @@
-# app.py
-
 import streamlit as st
 import openai
 import os
 import time
+from price_checker import get_aldi_lidl_prices  # Import the scraper function
 
-# ✅ MUST be the first Streamlit call
+# ✅ Set the page config (must be the first Streamlit function)
 st.set_page_config(page_title="💬 BudgetBot", layout="centered")
 
 # 🔑 Load the OpenAI API key
@@ -84,16 +83,28 @@ with st.form(key="chat_form", clear_on_submit=True):
     user_input = st.text_input("Type your message:", placeholder="e.g. Can I afford a takeaway?")
     submitted = st.form_submit_button("Send")
 
-# ✅ Only process when submitted and user_input is not empty
-if submitted and user_input.strip():
+if submitted and user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    with st.spinner("BudgetBot is thinking..."):
-        response = client.chat.completions.create(
+    # Check if user asks for product prices (milk or bread)
+    if 'compare' in user_input.lower() and ('milk' in user_input.lower() or 'bread' in user_input.lower()):
+        product = "milk" if "milk" in user_input.lower() else "bread"
+        aldi_price, lidl_price = get_aldi_lidl_prices(product)
+
+        if aldi_price and lidl_price:
+            response_text = f"Here’s what I found 🛒:\n\n🥛 Milk at Aldi: {aldi_price}\n🥛 Milk at Lidl: {lidl_price}\n💡 You save {abs(float(lidl_price[1])-float(aldi_price[1]))} shopping at {['Lidl', 'Aldi'][lidl_price[1] < aldi_price[1]]}!"
+        else:
+            response_text = "Sorry, I couldn't find the price info right now. Please try again later."
+        st.session_state.messages.append({"role": "assistant", "content": response_text})
+
+    else:
+        # Handle other queries using the new OpenAI completions API
+        response = openai.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": tone}] + st.session_state.messages[1:],
+            prompt="\n".join([msg['content'] for msg in st.session_state.messages]),
             max_tokens=300,
             temperature=0.85
         )
-        reply = response.choices[0].message.content.strip()
+        reply = response.choices[0].text.strip()
         st.session_state.messages.append({"role": "assistant", "content": reply})
+
