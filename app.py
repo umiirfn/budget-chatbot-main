@@ -98,13 +98,14 @@ if submitted and user_input:
         st.session_state.messages.append({"role": "assistant", "content": response_text})
 
     else:
-        # Handle other queries using the new OpenAI completions API
-        response = openai.completions.create(
-            model="gpt-3.5-turbo",
-            prompt="\n".join([msg['content'] for msg in st.session_state.messages]),
+        # Handle other queries using the updated OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or gpt-4 if you have access
+            messages=[{"role": "system", "content": tone}] + st.session_state.messages[1:],
             max_tokens=300,
             temperature=0.85
         )
-        reply = response.choices[0].text.strip()
+        reply = response.choices[0].message.content.strip()
         st.session_state.messages.append({"role": "assistant", "content": reply})
+
 
